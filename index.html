@@ -47,7 +47,8 @@ label.chk{display:flex;gap:6px;align-items:center;color:var(--muted);cursor:poin
 .phase{display:flex;flex-direction:column;gap:10px}
 .phase-h{font:700 15px var(--display);letter-spacing:.06em;color:var(--surface);background:var(--olive);padding:5px 12px;border-radius:6px;align-self:flex-start}
 .phase-h.fire{background:var(--red)}
-.box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;grid-template-columns:64px 1fr;gap:4px 14px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;grid-template-columns:64px 1fr;gap:0 14px}
+.box>.it,.box>h3,.box>.note,.box>.time{margin-block:2px}
 .box.fire{background:var(--red-soft);border-color:color-mix(in srgb,var(--red) 35%,var(--line))}
 .letter{grid-row:span 30;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:2px}
 .letter b{width:52px;height:52px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font:800 26px var(--display);direction:ltr}
