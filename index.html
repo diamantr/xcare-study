@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>X-CARE בעל פה</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Assistant:wght@400;600;700&display=swap">
+<style>
+/* Layout: one column field-manual card stack; mode tabs on top, stage picker, work area. */
+:root{
+  --bg:#ECEEE5; --surface:#FBFBF7; --ink:#1E2518; --muted:#5D6555; --line:#CDD2BE;
+  --olive:#5F6F17; --olive-soft:#DCE2C2; --red:#B3332B; --red-soft:#F1D9D5; --ok:#2F7A3A; --gold:#9A6B00;
+  --display:'Rubik',system-ui,sans-serif; --body:'Assistant',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12160F; --surface:#1B2117; --ink:#E5E9DA; --muted:#A2AA95; --line:#323B2B;
+  --olive:#AFC24F; --olive-soft:#2B3420; --red:#EC6E63; --red-soft:#3A1F1C; --ok:#6CC27A; --gold:#E2B54A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12160F; --surface:#1B2117; --ink:#E5E9DA; --muted:#A2AA95; --line:#323B2B;
+  --olive:#AFC24F; --olive-soft:#2B3420; --red:#EC6E63; --red-soft:#3A1F1C; --ok:#6CC27A; --gold:#E2B54A; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;direction:rtl;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 60px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance}
+header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px}
+header h1{font-size:34px;font-weight:800;letter-spacing:.01em}
+header h1 span{color:var(--olive)}
+header p{margin:2px 0 0;color:var(--muted)}
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;flex-wrap:wrap}
+.tabs button{flex:1 1 auto;border:0;background:none;color:var(--muted);font:600 16px var(--body);padding:8px 14px;border-radius:9px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--olive);color:var(--surface)}
+button{font-family:var(--body)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+select,input[type=text]{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+select{min-width:0;max-width:100%}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;font-size:16px;padding:9px 16px;border-radius:9px;cursor:pointer}
+.btn.pri{background:var(--olive);border-color:var(--olive);color:var(--surface)}
+.btn.good{border-color:var(--ok);color:var(--ok)} .btn.bad{border-color:var(--red);color:var(--red)}
+.btn:disabled{opacity:.45;cursor:default}
+.muted{color:var(--muted)} .small{font-size:14px}
+label.chk{display:flex;gap:6px;align-items:center;color:var(--muted);cursor:pointer}
+
+/* sheet */
+.phase{display:flex;flex-direction:column;gap:10px}
+.phase-h{font:700 15px var(--display);letter-spacing:.06em;color:var(--surface);background:var(--olive);padding:5px 12px;border-radius:6px;align-self:flex-start}
+.phase-h.fire{background:var(--red)}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;grid-template-columns:64px 1fr;gap:4px 14px}
+.box.fire{background:var(--red-soft);border-color:color-mix(in srgb,var(--red) 35%,var(--line))}
+.letter{grid-row:span 30;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:2px}
+.letter b{width:52px;height:52px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font:800 26px var(--display);direction:ltr}
+.letter small{font:600 12px var(--display);color:var(--muted);text-align:center;direction:ltr;line-height:1.15}
+.box h3{font-size:17px;color:var(--muted);font-weight:500;grid-column:2}
+.it{grid-column:2;display:flex;gap:8px;align-items:flex-start;min-width:0}
+.it::before{content:'';flex:none;width:11px;height:11px;margin-top:8px;border-radius:50%;border:2px solid var(--olive)}
+.it.l1{padding-inline-start:26px} .it.l1::before{width:7px;height:7px;margin-top:10px;background:var(--olive);border:0}
+.it.hd{font-weight:700}
+.it .tx{min-width:0}
+.it.weak .tx{box-shadow:inset 0 -3px 0 color-mix(in srgb,var(--gold) 55%,transparent)}
+.tag{display:inline-block;font:700 12px var(--display);padding:1px 7px;border-radius:5px;margin-inline-start:6px;vertical-align:2px;white-space:nowrap}
+.tag.m{background:var(--red);color:var(--surface)} .tag.r{border:1px solid var(--red);color:var(--red)}
+.tag.k{background:var(--ink);color:var(--surface);direction:ltr;margin:0 0 0 8px}
+.note{grid-column:2;font-size:14px;color:var(--muted);border-inline-start:3px solid var(--line);padding-inline-start:10px;margin-top:4px}
+.time{grid-column:2;font:700 13px var(--display);color:var(--red);margin-top:4px}
+.cover .it .tx{filter:blur(6px);cursor:pointer;transition:filter .15s}
+.cover .it .tx.show{filter:none}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--muted)}
+.callout{border:2px solid var(--ink);border-radius:10px;padding:10px 14px;font-weight:700}
+.team{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.team .box{grid-template-columns:1fr}
+.team .box h3{grid-column:1;color:var(--ink);font-weight:700}
+.team .it{grid-column:1} .team .it::before{display:none}
+
+/* practice */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.card .crumb{font:600 14px var(--display);color:var(--muted)}
+.card h2{font-size:26px}
+.card h2 .lt{color:var(--olive);direction:ltr;display:inline-block;margin-inline-end:8px}
+.slots{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;counter-reset:s}
+.slots li{counter-increment:s;display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:9px;border:1px dashed var(--line);min-width:0}
+.slots li::before{content:counter(s);flex:none;font:700 14px var(--display);width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--olive-soft);color:var(--ink)}
+.slots li.l1{margin-inline-start:28px}
+.slots li.open{border-style:solid}
+.slots li.good{border-color:var(--ok)} .slots li.bad{border-color:var(--red);background:var(--red-soft)}
+.slots li .q{color:var(--muted);letter-spacing:.2em}
+.slots li .tx{min-width:0}
+.acro{font:700 20px var(--display);letter-spacing:.08em;color:var(--olive)}
+.score{font:800 40px var(--display);color:var(--olive)}
+.cz{font-size:20px;line-height:2.1}
+.cz input{width:9ch;padding:2px 8px;font-size:18px}
+.cz input.good{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--surface))}
+.cz input.bad{border-color:var(--red);background:var(--red-soft)}
+.ans{color:var(--ok);font-weight:700;font-size:15px}
+.pool{display:flex;flex-direction:column;gap:8px}
+.pool button{text-align:right;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:10px 12px;border-radius:9px;font-size:16px;cursor:pointer}
+.pool button.wrong{border-color:var(--red);background:var(--red-soft)}
+.built{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;counter-reset:b}
+.built li{counter-increment:b;padding:8px 10px;border-radius:9px;background:var(--olive-soft);display:flex;gap:10px}
+.built li::before{content:counter(b);font:700 14px var(--display);color:var(--olive)}
+.prog{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--olive)}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.stats div{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:14px}
+.stats b{font-family:var(--display)}
+@media (max-width:520px){.box{grid-template-columns:44px 1fr;padding:12px}.letter b{width:40px;height:40px;font-size:20px}.it.l1{padding-inline-start:12px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1><span>X-CARE</span> בעל פה</h1>
+      <p>הסכמה האחודה לטיפול בפצוע בודד, מילה במילה לפי הדף</p>
+    </div>
+    <nav class="tabs" id="tabs" aria-label="מצב לימוד">
+      <button data-m="read" aria-pressed="true">עיון</button>
+      <button data-m="recall" aria-pressed="false">שליפה</button>
+      <button data-m="cloze" aria-pressed="false">השלמה</button>
+      <button data-m="order" aria-pressed="false">סידור</button>
+    </nav>
+  </header>
+  <div class="bar" id="picker"></div>
+  <main id="view"></main>
+</div>
+
+<script>
+// ---------- data: transcribed from the sheet. [[...]] = words blanked in "השלמה" ----------
+const PHASES={fire:'טיפול תחת אש',p1:'סקר ראשוני',evac:'פינוי',p2:'סקר שניוני · ניטור מדדים רציף',pfc:'טיפול מתמשך',gen:'מקרא והערות',team:'דוגמא לביצוע הסכמה בעבודת צוות'};
+const I=(t,o={})=>Object.assign({t},o);
+const SECTIONS=[
+ {id:'x',ph:'fire',L:'X',en:'',items:[
+  I('ביצוע תרגולת \'[[חלץ-טפל]]\' או טכניקה קרבית "[[פצוע בכוח]]":',{hd:1,r:[2]}),
+  I('[[הכרזה]] בשטח ובקשר על פצוע בכוח',{l:1}),
+  I('השגת [[עליונות באש]]',{l:1}),
+  I('הגעה ל[[מחסה ראשוני]] ע"י [[חילוץ עצמי]] או על ידי כוח שהוגדר לכך',{l:1}),
+  I('[[עצירת דימום פורץ]] עצמאית או ע"י [[לוחם/מטפל סמוך]]',{l:1})]},
+ {id:'ex',ph:'p1',L:'X',en:'EXtract',items:[
+  I('הגעה לסביבה [[מאובטחת/בטוחה]]'),
+  I('[[התרשמות ראשונית מהירה]] - [[מנגנון הפציעה]], בחינה ויזואלית ופניה לפצוע, [[דחיפות]]'),
+  I('[[דיווח אגמי]] - פניה, הזדהות, תיאור האירוע, מיקום, [[מספר פצועים]] ו[[דחיפות פינוי]]')]},
+ {id:'c1',ph:'p1',L:'C',en:'Circulation',times:{0:'30 שניות',2:'60 שניות'},items:[
+  I('[[עצירת דימום פורץ]]. במידה ובוצע בדרג קודם ← [[וידוא שהדימום נעצר]]'),
+  I('חיפוש אחר [[פציעות ומקורות דימום]] בגו, בגפיים ובאזורים נסתרים תוך ביצוע [[הפיכה והפשטה]] - ראש, חזה, עורף, [[בתי שחי]], גב, גפיים, [[עכוז]] ומפשעות - עצירת דימום שזוהה'),
+  I('[[הערכה קלינית]]:',{hd:1}),
+  I('בדיקת הכרה לפי [[AVPU]]',{l:1}),
+  I('בהיעדר נשימה או בהיעדר [[תגובה לכאב]] ← ביצוע [[JT]] והחדרת [[AW]]',{l:1}),
+  I('בטראומה ישירה ל[[נתיב האוויר]] ← [[סילוק הפרשות]] והושבה',{l:1}),
+  I('מדידת [[לחץ דם]]',{l:1,m:1}),
+  I('מדידת דופק [[איכותית וכמותית]]',{l:1}),
+  I('מדידת [[ריווי חמצן]] (סטורציה)',{l:1}),
+  I('[[בהלם עמוק]] על פי הקריטריונים ← הנחיית הצוות להשגת [[גישה למחזור הדם]] והכנת [[מוצרי דם]]',{m:1,r:[3]}),
+  I('המשך ביצוע הסכמה על ידי [[מט"ב]]',{l:1}),
+  I('הפעולות עצמן יבוצעו על ידי [[חובשים]] בלבד בשלב זה',{l:1})]},
+ {id:'evac',ph:'evac',L:'↓',en:'פינוי',items:[
+  I('תחילת פינוי בהתאם ל[[מצב המבצעי]] ויכולת [[הטיפול בפינוי]]'),
+  I('טרם הפינוי יש לבצע [[חיתוך מצב]] בצוות ולהעביר [[דיווח רפואי]]'),
+  I('השלמת [[השלבים הבאים]] במהלך הפינוי')]},
+ {id:'ar1',ph:'p1',L:'A · R',en:'Airway · Respiration',items:[
+  I('הערכת נתיב האוויר ו[[מצוקה נשימתית]] תוך [[פניה לפצוע והסתכלות]].'),
+  I('שימוש ב[[אמצעים בסיסיים]] לניהול נתיב האוויר:',{r:[4]}),
+  I('[[פתיחת פה]] וסילוק הפרשות',{l:1}),
+  I('[[הושבה]]',{l:1}),
+  I('[[העשרה בחמצן]]',{l:1,r:[5]}),
+  I('בהיעדר נשימה ← הנשמה באמצעות [[אמבו ומסיכה]]',{l:1}),
+  I('בחשד לפגיעה ← שמירה על [[עמש"צ]]'),
+  I('[[חשיפת בית החזה]] והתרשמות מ[[סימני חבלה]]')]},
+ {id:'e1',ph:'p1',L:'E',en:'& Exposure Evacuation',items:[
+  I('וידוא [[הפשטה מלאה]] והפיכה - איתור כלל הפציעות, עצירת דימום במידה וזוהה'),
+  I('[[ראש]] - התרשמות מסימני חבלה',{r:[11]}),
+  I('עמש"צ - בחשד לפגיעה ← [[הנחת צווארון]]',{m:1,r:[12]}),
+  I('[[אגן]] - הערכה וביצוע [[כריכת אגן]]',{m:1,r:[12]}),
+  I('[[כיסוי, חימום]] והעמסה ל[[אלונקה]]'),
+  I('[[חיתוך מצב]] - סיכום הממצאים, הגדרת [[דחיפות הפינוי]] ומתן הנחיות לצוות'),
+  I('העברת [[דיווח רפואי]] והשלמת תיעוד ב-[[101]] דיגיטלי או ידני')]},
+ {id:'c2',ph:'p2',L:'C',en:'',items:[
+  I('הערכת הלם חוזרת והמשך [[החזר נפח]] לפצועים בהלם עמוק',{r:[3]}),
+  I('השגת [[גישה למחזור הדם]] וקיבוע',{r:[10]}),
+  I('מתן [[TXA]]',{m:1,r:[3]}),
+  I('הערכה חוזרת ו[[המרת חסמי עורקים]]'),
+  I('קיבוע ומתיחה של [[שבר בירך]] באמצעות [[סד תומאס]]',{m:1,r:[12]}),
+  I('השלמת [[עירוי פריפרי שני]] בפצוע שנזקק להחזר נפח')]},
+ {id:'a2',ph:'p2',L:'A',en:'',items:[
+  I('הערכה חוזרת של נתיב אוויר וניהול [[שמרני]] או ע"י [[התערבות]]',{r:[4],m:1})]},
+ {id:'r2',ph:'p2',L:'R',en:'',items:[
+  I('[[העשרה בחמצן]]',{r:[5]}),
+  I('בפצוע מונשם [[חיבור למנשם]] והכנת [[תרופות הרדמה]] להמשך',{m:1}),
+  I('החדרת [[נקז חזה]] לפצוע חזה [[מונשם]] במידת הצורך בלבד',{m:1,r:[5]})]},
+ {id:'e2',ph:'p2',L:'E',en:'Everything Else',items:[
+  I('[[הערכת כאב]] וטיפול',{r:[15]}),
+  I('מניעת זיהומים - [[שטיפת פצעים]], חבישה, [[טיפול אנטיביוטי]]',{m:1,r:[16]}),
+  I('הערכת [[GCS]], התרשמות מתנועות ידיים ורגליים ובדיקת [[אישונים]]',{m:1}),
+  I('[[סריקה גופנית מלאה]] מהקודקוד ועד לבהונות הרגליים - טיפול בכל פציעה המזוהה בדרך'),
+  I('[[קיבוע שברים]]'),
+  I('וידוא [[כלל הקיבועים]]'),
+  I('השלמת [[תיעוד]] ב-101 דיגיטלי או ידני'),
+  I('הערכה לקיומה של [[תגובת דחק/קרב]] וביצוע התערבות [[יהלו"ם]]'),
+  I('העברת [[דיווח רפואי חוזר]]')]},
+ {id:'pfc',ph:'pfc',L:'PFC',en:'Prolonged Field Care',items:[
+  I('ניטור ותיעוד [[הסימנים החיוניים]] באופן [[תדיר ומחזורי]]'),
+  I('החדרת [[נקז חזה]] לפצוע חזה [[נושם עצמונית]] עם הדרדרות נשימתית',{m:1,r:[5]}),
+  I('מתן חוזר של [[טיפול תרופתי]] תוך ורידי',{r:[16,3]}),
+  I('הכנסת [[צנתר שתן]] ובפצוע מונשם הכנסת [[זונדה]] לניקוז הקיבה',{m:1}),
+  I('מניעת [[פצעי לחץ]]')]},
+ {id:'gen',ph:'gen',L:'!',en:'',items:[
+  I('יבוצע בנוכחות [[מט"ב]] בלבד'),
+  I('יבוצע בנוכחות [[התוויה]] בלבד, ראה פרק מתאים'),
+  I('בעבודה בצוות יש חשיבות רבה לביצוע שלבי הסכמה [[במקביל]], בדגש על [[הערכה המודינמית]] ומתן [[מוצרי דם]]')]},
+ {id:'tall',ph:'team',L:'X',en:'כולם',role:'כל הצוות',items:[I('הגעה לסביבה [[מאובטחת]]',{k:'X'})]},
+ {id:'tm',ph:'team',L:'מט"ב',en:'',role:'מט"ב',items:[
+  I('[[התרשמות ראשונית]] מהירה',{k:'X'}),
+  I('[[עצירת דימום פורץ]]',{k:'C'}),
+  I('חיפוש מקורות דימום כולל [[הפיכה]]',{k:'C'}),
+  I('[[הערכה קלינית]] של הפצוע (AVPU, קיום נשימה, טראומה לנתיב אוויר, דופק וסטורציה, ל"ד)',{k:'C'}),
+  I('הערכת [[הלם עמוק]] והחלטה על מתן [[מוצרי דם]]',{k:'C'}),
+  I('הערכת [[AW]] ומצב נשימתי',{k:'A'}),
+  I('בחשד לפגיעה - ניהול AW [[בסיסי]]',{k:'A'}),
+  I('בהיעדר נשימה - הנשמה ב[[אמבו ומסיכה]]',{k:'A'}),
+  I('שמירה על [[עמש"צ]]',{k:'A'}),
+  I('התחלת פינוי במידה וזמין - [[חיתוך מצב]] ודיווח'),
+  I('[[חשיפת ביה"ח]], התרשמות',{k:'R'}),
+  I('הפשטה מלאה כולל [[איזור מעבר]]',{k:'E'}),
+  I('ראש - התרשמות מ[[חבלות]]',{k:'E'}),
+  I('עמש"צ - הנחת [[צווארון]] בחשד לפציעה',{k:'E'}),
+  I('הערכת אגן והחלטה על [[כריכה]]',{k:'E'}),
+  I('כיסוי ו[[אלונקה]]',{k:'E'}),
+  I('[[סיכום הממצאים]] - הגדרת דחיפות ותכנית טיפול',{k:'E'})]},
+ {id:'t1',ph:'team',L:'1',en:'',role:'חובש 1',items:[
+  I('[[דיווח אגמי]] וחיפות פינוי',{k:'X'}),
+  I('מדידת [[ל"ד]]',{k:'C'}),
+  I('[[פאלס על האצבע]] - דופק וסטורציה',{k:'C'}),
+  I('בהיעדר נשימה - הנשמה ב[[אמבו ומסיכה]]',{k:'C'}),
+  I('בהלם עמוק - השגת [[גישה למחזור הדם]] ומתן מוצרי דם',{k:'C'}),
+  I('דיווח רפואי ([[טרם התחלת פינוי]])'),
+  I('[[חמצן]] במידת הצורך',{k:'R'}),
+  I('העברת [[דיווח רפואי עדכני]]',{k:'E'})]},
+ {id:'t2',ph:'team',L:'2',en:'',role:'חובש 2',items:[
+  I('[[עצירת דימום פורץ]]',{k:'C'}),
+  I('חיפוש מקורות דימום כולל [[הפיכה]]',{k:'C'}),
+  I('הפשטה מלאה כולל [[איזורי מעבר]]',{k:'C'}),
+  I('ביצוע [[כריכת אגן]] במידת הצורך',{k:'E'}),
+  I('כיסוי, חימום והעמסה ו[[קיבוע על אלונקה]]',{k:'E'}),
+  I('השלמת תיעוד ב-[[101]]',{k:'E'})]}
+];
+SECTIONS.forEach(s=>s.items.forEach((it,i)=>{it.id=s.id+'-'+i;it.plain=it.t.replace(/\[\[|\]\]/g,'')}));
+const byId=Object.fromEntries(SECTIONS.map(s=>[s.id,s]));
+const label=s=>s.role?('צוות · '+s.role):(PHASES[s.ph]+(s.L&&s.L!=='!'&&s.L!=='↓'?' · '+s.L:'')+(s.en&&!s.role?' '+s.en:''));
+const GROUPS=[
+ ['all','כל הסכמה ברצף (ללא דוגמת צוות)',SECTIONS.filter(s=>s.ph!=='team'&&s.ph!=='gen').map(s=>s.id)],
+ ['front','צד א׳: תחת אש + סקר ראשוני + פינוי',['x','ex','c1','evac','ar1','e1']],
+ ['back','צד ב׳: סקר שניוני + PFC',['c2','a2','r2','e2','pfc']],
+ ['team','דוגמת עבודת צוות',['tall','tm','t1','t2']],
+ ...SECTIONS.map(s=>[s.id,label(s),[s.id]])
+];
+
+// ---------- storage (per-viewer, optional) ----------
+let ST={};try{ST=JSON.parse(localStorage.getItem('xcare-stats')||'{}')}catch(e){}
+function save(){try{localStorage.setItem('xcare-stats',JSON.stringify(ST))}catch(e){}}
+function mark(id,ok){const s=ST[id]||(ST[id]={o:0,x:0});ok?s.o++:s.x++;save()}
+const weak=id=>{const s=ST[id];return s&&s.x>0&&s.x>=s.o};
+let pref={mode:'read',group:'all',cover:false,weakOnly:false};
+try{Object.assign(pref,JSON.parse(localStorage.getItem('xcare-pref')||'{}'))}catch(e){}
+const savePref=()=>{try{localStorage.setItem('xcare-pref',JSON.stringify(pref))}catch(e){}};
+
+// ---------- helpers ----------
+const $=s=>document.querySelector(s);
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const tags=it=>(it.m?'<span class="tag m">מט"ב</span>':'')+(it.r||[]).map(n=>'<span class="tag r">פרק '+n+'</span>').join('');
+const kTag=it=>it.k?'<span class="tag k">'+it.k+'</span>':'';
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const norm=s=>s.replace(/[֑-ׇ]/g,'').replace(/[ךםןףץ]/g,c=>({'ך':'כ','ם':'מ','ן':'נ','ף':'פ','ץ':'צ'}[c])).replace(/[\s"'״׳\-–,.()\/:]/g,'').toLowerCase();
+function lev(a,b){const d=Array.from({length:a.length+1},(_,i)=>[i]);for(let j=1;j<=b.length;j++)d[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[a.length][b.length]}
+const close=(g,a)=>{g=norm(g);a=norm(a);return g===a||(g.length>2&&lev(g,a)<=Math.max(1,Math.floor(a.length/7)))};
+const firstLetters=t=>t.split(/\s+/).filter(Boolean).map(w=>{const m=w.match(/[א-תA-Za-z0-9]/);return m?m[0]:w}).join(' ');
+const acro=s=>s.items.filter(i=>!i.l).map(i=>{const m=i.plain.match(/[א-תA-Za-z]/);return m?m[0]:'?'}).join('·');
+const sectionsOf=g=>(GROUPS.find(x=>x[0]===g)||GROUPS[0])[2].map(id=>byId[id]);
+
+// ---------- picker ----------
+function renderPicker(){
+  const p=$('#picker');
+  if(pref.mode==='read'){
+    p.innerHTML='<label class="chk"><input type="checkbox" id="cov"'+(pref.cover?' checked':'')+'> מצב כיסוי: הטקסט מטושטש, לחיצה חושפת</label>'+
+      '<span class="legend"><span><span class="tag m">מט"ב</span> יבוצע בנוכחות מט"ב בלבד</span><span><span class="tag r">פרק N</span> בנוכחות התוויה בלבד</span><span><span style="box-shadow:inset 0 -3px 0 var(--gold)">קו צהוב</span> טעית בזה בתרגול</span></span>';
+    $('#cov').onchange=e=>{pref.cover=e.target.checked;savePref();render()};
+    return;
+  }
+  p.innerHTML='<label for="grp" class="muted">מה ללמוד:</label><select id="grp">'+GROUPS.map(g=>'<option value="'+g[0]+'"'+(g[0]===pref.group?' selected':'')+'>'+esc(g[1])+'</option>').join('')+'</select>'+
+    (pref.mode==='cloze'?'<label class="chk"><input type="checkbox" id="wk"'+(pref.weakOnly?' checked':'')+'> רק מה שטעיתי בו</label>':'')+
+    '<button class="btn" id="reset">איפוס התקדמות</button>';
+  $('#grp').onchange=e=>{pref.group=e.target.value;savePref();render()};
+  const wk=$('#wk');if(wk)wk.onchange=e=>{pref.weakOnly=e.target.checked;savePref();render()};
+  const r=$('#reset');let armed=false;r.onclick=()=>{if(!armed){armed=true;r.textContent='ללחוץ שוב לאישור';setTimeout(()=>{armed=false;r.textContent='איפוס התקדמות'},2500);return}ST={};save();render()};
+}
+
+// ---------- READ ----------
+function boxHTML(s){
+  if(s.ph==='team')return '<div class="box"><h3>'+esc(s.role)+'</h3>'+s.items.map(it=>'<div class="it'+(weak(it.id)?' weak':'')+'">'+kTag(it)+'<span class="tx">'+esc(it.plain)+'</span></div>').join('')+'</div>';
+  let h='<div class="box'+(s.ph==='fire'?' fire':'')+'"><div class="letter"><b>'+esc(s.L)+'</b>'+(s.en?'<small>'+esc(s.en)+'</small>':'')+'</div>';
+  s.items.forEach((it,i)=>{
+    if(s.times&&s.times[i])h+='<div class="time">⏱ זמן מוערך לביצוע השלב: '+s.times[i]+(s.times[i]==='60 שניות'?' <span class="muted small">(המספר חתוך בצילום, לוודא בדף)</span>':'')+'</div>';
+    h+='<div class="it'+(it.l?' l1':'')+(it.hd?' hd':'')+(weak(it.id)?' weak':'')+'"><span class="tx">'+esc(it.plain)+tags(it)+'</span></div>';
+  });
+  return h+'</div>';
+}
+function renderRead(){
+  const v=$('#view');let h='';let last='';
+  const order=['x','ex','c1','ar1','e1','evac','c2','a2','r2','e2','pfc','gen'];
+  order.forEach(id=>{const s=byId[id];
+    if(s.ph!==last){if(last)h+='</section>';h+='<section class="phase"><span class="phase-h'+(s.ph==='fire'?' fire':'')+'">'+PHASES[s.ph]+'</span>';last=s.ph}
+    if(id==='gen'){h+='<div class="box"><div class="letter"><b>!</b></div><div class="it"><span class="tx"><span class="tag m">מט"ב</span> '+esc(s.items[0].plain)+'</span></div><div class="it"><span class="tx"><span class="tag r">פרק</span> '+esc(s.items[1].plain)+'</span></div><div class="it hd"><span class="tx">'+esc(s.items[2].plain)+'</span></div></div>';return}
+    if(id==='evac'){h+='<div class="note" style="margin:0 0 2px;border:0;padding:0">בדף: מלבן "פינוי" בצד הסקר הראשוני, לצד A–E. אחריו החץ "סקר שניוני ←".</div>'}
+    h+=boxHTML(s);
+  });
+  h+='</section><section class="phase"><span class="phase-h">'+PHASES.team+'</span><div class="team">'+['tall','tm','t1','t2'].map(id=>boxHTML(byId[id])).join('')+'</div></section>';
+  v.innerHTML='<div class="wrap'+(pref.cover?' cover':'')+'" style="gap:22px">'+h+'</div>';
+  v.querySelectorAll('.cover .tx').forEach(t=>t.onclick=()=>t.classList.toggle('show'));
+}
+
+// ---------- RECALL ----------
+let R=null;
+function startRecall(){const secs=sectionsOf(pref.group);R={secs,si:0,ri:0,res:[],marks:{},hint:false}}
+function renderRecall(){
+  if(!R||R.key!==pref.group){startRecall();R.key=pref.group}
+  const v=$('#view');
+  if(R.si>=R.secs.length){
+    const tot=R.res.length,ok=R.res.filter(x=>x.ok).length,miss=R.res.filter(x=>!x.ok);
+    v.innerHTML='<div class="card"><span class="crumb">סיום סבב</span><div class="score">'+ok+' / '+tot+'</div>'+
+      (miss.length?'<h3>לחזור על:</h3><ul class="slots">'+miss.map(m=>'<li class="open bad"><span class="tx">'+esc(m.it.plain)+'</span></li>').join('')+'</ul>':'<p>כל הפעולות נשלפו נכון.</p>')+
+      '<div class="bar"><button class="btn pri" id="again">סבב חדש</button>'+(miss.length?'<button class="btn" id="rep">רק הטעויות</button>':'')+'</div></div>';
+    $('#again').onclick=()=>{startRecall();R.key=pref.group;render()};
+    const rp=$('#rep');if(rp)rp.onclick=()=>{const ids=new Set(miss.map(m=>m.it.id));R={key:pref.group,secs:R.secs.map(s=>({...s,items:s.items.filter(i=>ids.has(i.id))})).filter(s=>s.items.length),si:0,ri:0,res:[],marks:{}};render()};
+    return;
+  }
+  const s=R.secs[R.si],n=s.items.length,done=R.res.length,all=R.secs.reduce((a,x)=>a+x.items.length,0);
+  let li='';
+  s.items.forEach((it,i)=>{
+    const open=i<R.ri,mk=R.marks[it.id];
+    li+='<li class="'+(it.l?'l1 ':'')+(open?'open ':'')+(mk===true?'good':mk===false?'bad':'')+'">'+(open?kTag(it)+'<span class="tx">'+esc(it.plain)+tags(it)+'</span>':(R.hint?'<span class="q">'+esc(firstLetters(it.plain))+'</span>':'<span class="q">· · ·</span>'))+'</li>';
+  });
+  const pending=R.ri>0&&R.marks[s.items[R.ri-1].id]===undefined;
+  v.innerHTML='<div class="card"><div class="prog"><i style="width:'+(100*done/all)+'%"></i></div>'+
+    '<span class="crumb">'+esc(label(s))+' · '+(R.si+1)+' מתוך '+R.secs.length+'</span>'+
+    '<h2><span class="lt">'+esc(s.L)+'</span>'+n+' שורות. אמור אותן בקול, ואז חשוף.</h2>'+
+    '<div class="muted small">ראשי תיבות של השורות הראשיות: <span class="acro">'+esc(acro(s))+'</span></div>'+
+    '<ol class="slots">'+li+'</ol><div class="bar">'+
+    (pending?'<button class="btn good" id="ok">ידעתי (1)</button><button class="btn bad" id="no">פספסתי (2)</button>'
+      :R.ri<n?'<button class="btn pri" id="rev">חשוף שורה '+(R.ri+1)+' (רווח)</button><button class="btn" id="hint">'+(R.hint?'הסתר אותיות':'רמז: אות ראשונה לכל מילה')+'</button>'
+      :'<button class="btn pri" id="next">'+(R.si+1<R.secs.length?'לשלב הבא':'לסיכום')+' (רווח)</button>')+'</div></div>';
+  const b=id=>$(id);
+  if(b('#rev'))b('#rev').onclick=()=>{R.ri++;render()};
+  if(b('#hint'))b('#hint').onclick=()=>{R.hint=!R.hint;render()};
+  const m=ok=>{const it=s.items[R.ri-1];R.marks[it.id]=ok;R.res.push({it,ok});mark(it.id,ok);render()};
+  if(b('#ok'))b('#ok').onclick=()=>m(true);
+  if(b('#no'))b('#no').onclick=()=>m(false);
+  if(b('#next'))b('#next').onclick=()=>{R.si++;R.ri=0;R.hint=false;render()};
+}
+
+// ---------- CLOZE ----------
+let Z=null;
+function startCloze(){let items=sectionsOf(pref.group).flatMap(s=>s.items.map(it=>({it,s})));if(pref.weakOnly)items=items.filter(x=>weak(x.it.id));Z={key:pref.group+pref.weakOnly,items,i:0,checked:false,ok:0}}
+function renderCloze(){
+  if(!Z||Z.key!==pref.group+pref.weakOnly)startCloze();
+  const v=$('#view');
+  if(!Z.items.length){v.innerHTML='<div class="card"><p>אין כאן שורות שטעית בהן. בטל את הסימון "רק מה שטעיתי בו" או תרגל קודם בשליפה.</p></div>';return}
+  if(Z.i>=Z.items.length){v.innerHTML='<div class="card"><span class="crumb">סיום</span><div class="score">'+Z.ok+' / '+Z.items.length+'</div><p class="muted">שורות שהושלמו במלואן נכון.</p><div class="bar"><button class="btn pri" id="again">שוב</button></div></div>';$('#again').onclick=()=>{startCloze();render()};return}
+  const {it,s}=Z.items[Z.i];const ans=[];
+  const html=esc(it.t).replace(/\[\[(.+?)\]\]/g,(_,a)=>{ans.push(a);const k=ans.length-1;return '<input type="text" id="z'+Z.i+'-'+k+'" data-k="'+k+'" style="width:'+Math.max(5,a.length+2)+'ch" autocomplete="off" aria-label="מילה חסרה '+(k+1)+'">'});
+  v.innerHTML='<div class="card"><div class="prog"><i style="width:'+(100*Z.i/Z.items.length)+'%"></i></div><span class="crumb">'+esc(label(s))+' · שורה '+(Z.i+1)+' מתוך '+Z.items.length+'</span>'+
+    '<div class="cz">'+kTag(it)+html+tags(it)+'</div><div id="fb"></div><div class="bar"><button class="btn pri" id="chk">בדוק (Enter)</button><button class="btn" id="show">הצג תשובה</button><button class="btn" id="skip">הבא</button></div></div>';
+  const ins=[...v.querySelectorAll('.cz input')];if(ins[0])ins[0].focus();
+  const check=reveal=>{
+    let all=true;ins.forEach((inp,k)=>{const good=!reveal&&close(inp.value,ans[k]);if(reveal)inp.value=ans[k];inp.className=reveal?'':good?'good':'bad';if(!good)all=false});
+    if(!reveal){mark(it.id,all);if(all)Z.ok++}
+    $('#fb').innerHTML=all?'<span class="ans">נכון</span>':'<span class="ans">התשובה: '+esc(it.plain)+'</span>';
+    $('#chk').textContent='הבא (Enter)';$('#chk').onclick=nx;
+  };
+  const nx=()=>{Z.i++;render()};
+  $('#chk').onclick=()=>check(false);$('#show').onclick=()=>{mark(it.id,false);check(true)};$('#skip').onclick=nx;
+  ins.forEach(inp=>inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('#chk').click()}});
+}
+
+// ---------- ORDER ----------
+let O=null;
+function startOrder(){const secs=sectionsOf(pref.group).filter(s=>s.items.length>1);O={key:pref.group,secs,si:0,built:0,err:0,pool:null,wrong:null}}
+function renderOrder(){
+  if(!O||O.key!==pref.group)startOrder();
+  const v=$('#view');
+  if(!O.secs.length){v.innerHTML='<div class="card"><p>בשלב הזה יש שורה אחת בלבד. בחר שלב אחר.</p></div>';return}
+  if(O.si>=O.secs.length){v.innerHTML='<div class="card"><span class="crumb">סיום</span><div class="score">'+O.err+'</div><p class="muted">טעויות סדר בסבב.</p><div class="bar"><button class="btn pri" id="again">שוב</button></div></div>';$('#again').onclick=()=>{startOrder();render()};return}
+  const s=O.secs[O.si];if(!O.pool)O.pool=shuffle(s.items.map((_,i)=>i));
+  const left=O.pool.filter(i=>i>=O.built);
+  v.innerHTML='<div class="card"><span class="crumb">'+esc(label(s))+' · '+(O.si+1)+' מתוך '+O.secs.length+'</span><h2><span class="lt">'+esc(s.L)+'</span>לחץ על השורות לפי הסדר בדף</h2>'+
+    '<ol class="built">'+s.items.slice(0,O.built).map(it=>'<li>'+kTag(it)+esc(it.plain)+'</li>').join('')+'</ol>'+
+    (left.length?'<div class="pool">'+left.map(i=>'<button data-i="'+i+'"'+(O.wrong===i?' class="wrong"':'')+'>'+esc(s.items[i].plain)+'</button>').join('')+'</div>':'<div class="bar"><button class="btn pri" id="next">'+(O.si+1<O.secs.length?'לשלב הבא':'לסיכום')+'</button></div>')+
+    '<p class="muted small">טעויות עד עכשיו: '+O.err+'</p></div>';
+  v.querySelectorAll('.pool button').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(i===O.built){O.built++;O.wrong=null}else{O.err++;O.wrong=i;mark(s.items[O.built].id,false)}render()});
+  const n=$('#next');if(n)n.onclick=()=>{O.si++;O.built=0;O.pool=null;O.wrong=null;render()};
+}
+
+// ---------- shell ----------
+function render(){
+  document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===pref.mode));
+  renderPicker();
+  ({read:renderRead,recall:renderRecall,cloze:renderCloze,order:renderOrder})[pref.mode]();
+}
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{pref.mode=b.dataset.m;savePref();render()});
+document.addEventListener('keydown',e=>{
+  if(pref.mode!=='recall'||e.target.matches('input,select'))return;
+  const k=e.key;const click=id=>{const b=$(id);if(b){e.preventDefault();b.click()}};
+  if(k===' ')click('#rev')||click('#next');if(k==='1')click('#ok');if(k==='2')click('#no');
+});
+render();
+</script>
+
+</body>
+</html>
