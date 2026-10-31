@@ -130,7 +130,7 @@ label.chk{display:flex;gap:6px;align-items:center;color:var(--muted);cursor:poin
 </div>
 
 <script>
-// ---------- data: transcribed from the sheet. [[...]] = words blanked in "השלמה" ----------
+// ---------- data: transcribed from the sheet. [[...]] = key terms (cloze now blanks random words by level) ----------
 const PHASES={fire:'טיפול תחת אש',p1:'סקר ראשוני',evac:'פינוי',p2:'סקר שניוני · ניטור מדדים רציף',pfc:'טיפול מתמשך',gen:'מקרא והערות',team:'דוגמא לביצוע הסכמה בעבודת צוות'};
 const I=(t,o={})=>Object.assign({t},o);
 const SECTIONS=[
@@ -263,7 +263,7 @@ let ST={};try{ST=JSON.parse(localStorage.getItem('xcare-stats')||'{}')}catch(e){
 function save(){try{localStorage.setItem('xcare-stats',JSON.stringify(ST))}catch(e){}}
 function mark(id,ok){const s=ST[id]||(ST[id]={o:0,x:0});ok?s.o++:s.x++;save()}
 const weak=id=>{const s=ST[id];return s&&s.x>0&&s.x>=s.o};
-let pref={mode:'read',group:'all',cover:false,weakOnly:false};
+let pref={mode:'read',group:'all',cover:false,weakOnly:false,level:'easy'};
 try{Object.assign(pref,JSON.parse(localStorage.getItem('xcare-pref')||'{}'))}catch(e){}
 const savePref=()=>{try{localStorage.setItem('xcare-pref',JSON.stringify(pref))}catch(e){}};
 
@@ -290,9 +290,10 @@ function renderPicker(){
     return;
   }
   p.innerHTML='<label for="grp" class="muted">מה ללמוד:</label><select id="grp">'+GROUPS.map(g=>'<option value="'+g[0]+'"'+(g[0]===pref.group?' selected':'')+'>'+esc(g[1])+'</option>').join('')+'</select>'+
-    (pref.mode==='cloze'?'<label class="chk"><input type="checkbox" id="wk"'+(pref.weakOnly?' checked':'')+'> רק מה שטעיתי בו</label>':'')+
+    (pref.mode==='cloze'?'<label for="lvl" class="muted">רמה:</label><select id="lvl">'+LEVELS.map(l=>'<option value="'+l[0]+'"'+(l[0]===pref.level?' selected':'')+'>'+esc(l[1])+'</option>').join('')+'</select><label class="chk"><input type="checkbox" id="wk"'+(pref.weakOnly?' checked':'')+'> רק מה שטעיתי בו</label>':'')+
     '<button class="btn" id="reset">איפוס התקדמות</button>';
   $('#grp').onchange=e=>{pref.group=e.target.value;savePref();render()};
+  const lv=$('#lvl');if(lv)lv.onchange=e=>{pref.level=e.target.value;savePref();render()};
   const wk=$('#wk');if(wk)wk.onchange=e=>{pref.weakOnly=e.target.checked;savePref();render()};
   const r=$('#reset');let armed=false;r.onclick=()=>{if(!armed){armed=true;r.textContent='ללחוץ שוב לאישור';setTimeout(()=>{armed=false;r.textContent='איפוס התקדמות'},2500);return}ST={};save();render()};
 }
@@ -362,14 +363,35 @@ function renderRecall(){
 
 // ---------- CLOZE ----------
 let Z=null;
-function startCloze(){let items=sectionsOf(pref.group).flatMap(s=>s.items.map(it=>({it,s})));if(pref.weakOnly)items=items.filter(x=>weak(x.it.id));Z={key:pref.group+pref.weakOnly,items,i:0,checked:false,ok:0}}
+// רמות קושי: [מזהה, שם, חלק המילים שיוסתר]
+const LEVELS=[['easy','קל',0.25],['mid','בינוני',0.5],['hard','קשה',0.75],['all','כל השורה',1]];
+const levelRatio=()=>(LEVELS.find(l=>l[0]===pref.level)||LEVELS[0])[2];
+// מפרק שורה למילים, ומגריל אילו מהן יוסתרו לפי הרמה (יחסית לאורך השורה)
+function makeBlanks(plain,ratio){
+  const toks=plain.split(/(\s+)/).map(w=>{
+    if(!w||/^\s+$/.test(w))return {raw:w};
+    const m=w.match(/^([^א-תA-Za-z0-9]*)(.*?)([^א-תA-Za-z0-9]*)$/);
+    return /[א-תA-Za-z0-9]/.test(m[2])?{pre:m[1],core:m[2],post:m[3]}:{raw:w};
+  });
+  const cand=toks.map((t,i)=>t.core?i:-1).filter(i=>i>=0),n=cand.length;
+  // לפחות מילה אחת מוסתרת; ברמות שאינן "כל השורה" נשארת לפחות מילה אחת גלויה
+  let k=ratio>=1||n<=1?n:Math.min(n-1,Math.max(1,Math.round(n*ratio)));
+  shuffle(cand).slice(0,k).forEach(i=>toks[i].hide=true);
+  return toks;
+}
+function startCloze(){let items=sectionsOf(pref.group).flatMap(s=>s.items.map(it=>({it,s})));if(pref.weakOnly)items=items.filter(x=>weak(x.it.id));Z={key:pref.group+pref.weakOnly+pref.level,items,i:0,checked:false,ok:0}}
 function renderCloze(){
-  if(!Z||Z.key!==pref.group+pref.weakOnly)startCloze();
+  if(!Z||Z.key!==pref.group+pref.weakOnly+pref.level)startCloze();
   const v=$('#view');
   if(!Z.items.length){v.innerHTML='<div class="card"><p>אין כאן שורות שטעית בהן. בטל את הסימון "רק מה שטעיתי בו" או תרגל קודם בשליפה.</p></div>';return}
   if(Z.i>=Z.items.length){v.innerHTML='<div class="card"><span class="crumb">סיום</span><div class="score">'+Z.ok+' / '+Z.items.length+'</div><p class="muted">שורות שהושלמו במלואן נכון.</p><div class="bar"><button class="btn pri" id="again">שוב</button></div></div>';$('#again').onclick=()=>{startCloze();render()};return}
-  const {it,s}=Z.items[Z.i];const ans=[];
-  const html=esc(it.t).replace(/\[\[(.+?)\]\]/g,(_,a)=>{ans.push(a);const k=ans.length-1;return '<input type="text" id="z'+Z.i+'-'+k+'" data-k="'+k+'" style="width:'+Math.max(5,a.length+2)+'ch" autocomplete="off" aria-label="מילה חסרה '+(k+1)+'">'});
+  const cur=Z.items[Z.i],{it,s}=cur;const ans=[];
+  if(!cur.toks)cur.toks=makeBlanks(it.plain,levelRatio()); // נשמר כדי שההסתרה לא תשתנה ברינדור חוזר
+  const html=cur.toks.map(t=>{
+    if(!t.hide)return esc(t.raw!==undefined?t.raw:t.pre+t.core+t.post);
+    ans.push(t.core);const k=ans.length-1;
+    return esc(t.pre)+'<input type="text" id="z'+Z.i+'-'+k+'" data-k="'+k+'" style="width:'+Math.max(4,t.core.length+2)+'ch" autocomplete="off" aria-label="מילה חסרה '+(k+1)+'">'+esc(t.post);
+  }).join('');
   v.innerHTML='<div class="card"><div class="prog"><i style="width:'+(100*Z.i/Z.items.length)+'%"></i></div><span class="crumb">'+esc(label(s))+' · שורה '+(Z.i+1)+' מתוך '+Z.items.length+'</span>'+
     '<div class="cz">'+kTag(it)+html+tags(it)+'</div><div id="fb"></div><div class="bar"><button class="btn pri" id="chk">בדוק (Enter)</button><button class="btn" id="show">הצג תשובה</button><button class="btn" id="skip">הבא</button></div></div>';
   const ins=[...v.querySelectorAll('.cz input')];if(ins[0])ins[0].focus();
